@@ -1,32 +1,34 @@
-const express = require("express");
-const port = 5000;
+const path = require('path');
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+const port = process.env.PORT || 5000;
+const connectDB = require('./config/db');
+
+connectDB();
 
 const app = express();
 
-const ideas = [
-    {
-        id: 1,
-    }]
+// Static Folder
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get("/", (req, res) => {
-  res.json({ message: "Hello World" });
+// Body parser middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// cors middleware
+app.use(
+  cors({
+    origin: ['http://localhost:5000', 'http://localhost:3000'],
+    credentials: true,
+  })
+);
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the RandomIdeas API' });
 });
 
-app.get("/api/ideas", (req, res) => {
-  res.json({ message: "About Us" });
-});
+const ideasRouter = require('./routes/ideas');
+app.use('/api/ideas', ideasRouter);
 
-app.get("/api/ideas/:id", (req, res) => {
-  const idea = ideas.find((idea) => idea.id === parseInt(req.params.id));
-  if (!idea) {
-    return res
-      .status(404)
-      .json({
-        sucess: false,
-        message: `No idea with the id of ${req.params.id}`,
-      });
-  }
-  res.json({ message: "About Us" });
-});
-
-app.listen(port, console.log(`Server is running on port ${port}`));
+app.listen(port, () => console.log(`Server listening on port ${port}`));
